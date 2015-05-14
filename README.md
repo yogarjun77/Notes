@@ -1,6 +1,5 @@
 # Notes
 ### Loading and preprocessing
-https://rstudio-pubs-static.s3.amazonaws.com/65620_869a2c53ca55417397e60ed0993672fd.html  
 
  activity <- read.csv("./activity.csv", header = TRUE, sep = ",")  
  activity$date <- ymd(activity$date)  
@@ -15,6 +14,10 @@ step_total <-  ddply(activity, .(date), summarize, Sum = sum(steps, na.rm = TRUE
 
    
 ###Question 2  - Average daily activity pattern
+
+interval_total <- ddply(activity, .(interval), summarize, Average = mean(steps, na.rm = TRUE))  
+interval_total$interval2 <- formatC(interval_total$interval, width = 4, format = "d", flag = "0")  
+ interval_total$interval3 <- strptime(interval_total$interval2, "%H%M")  
  
  ggplot(interval_total, aes(x=interval2, y=Average)) +   
         geom_line(color="darkblue", size=1) +  
