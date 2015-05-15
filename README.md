@@ -39,7 +39,7 @@ for(i in 1:nrow(activity)){
 
 if(is.na(activity$steps[i])==TRUE){
 
-activity$steps[i]=interval_total$Average[which(interval_total$interval==activity$interval[i])]
+activity$steps[i]=by_interval$avg_steps[which(by_interval$interval==activity$interval[i])]
 }
 }
 
@@ -60,7 +60,7 @@ activity$day <- weekdays(activity$date)
 activity$day <- gsub("Saturday|Sunday", "weekend", activity$day)  
 activity$day <- gsub("Monday|Tuesday|Wednesday|Thursday|Friday", "weekday", activity$day)  
 
-activity2 %>%
+activity %>%
 	group_by(day, interval) %>%
 	summarize(avg_steps = mean(steps)) %>%
 	filter(grepl("weekday", day)
@@ -81,9 +81,9 @@ library(ggplot)
 #### Store csv file as "activity", convert dates to Posixlt, add extra column "time_interval" with interval as time
 
 
-activity <- read.csv("./activity.csv", header = TRUE, sep = ",")  
+activity <- read.csv("./activity.csv", header = TRUE, sep = ",")   
   
-activity$date <- as.POSIXct(activity$date) 
+activity$date <- as.POSIXct(activity$date)  
 activity$interval <- formatC(activity$interval, width = 4, format = "d", flag = "0")  
 #activity$time_interval <- strptime(activity$time_interval, "%H%M")     
 
@@ -102,7 +102,9 @@ step_total <- activity %>%
 
 
 ggplot(data = step_total, aes(x = total_steps))+
-	geom_histogram(colour = "black", fill = "lightblue", binwidth = 2000)
+	geom_histogram(colour = "black", fill = "lightblue", binwidth = 2000)+
+	theme_bw()
+	
 
 
 ####Mean & Median
@@ -130,6 +132,7 @@ by_interval <- activity %>%
 ggplot(by_interval, aes(x=interval2, y=avg_steps)) + theme_bw() + geom_line(color="blue", size=1) +
 labs(x="5 minute interval", y="Average steps", title = "Average Steps per 5-Minute Intervals")+
 scale_x_datetime(breaks =date_breaks("2 hour"), labels= date_format("%H:%M"))+
+theme_bw()
 
 
 ####Which 5-minute interval has highest number of steps
@@ -140,28 +143,47 @@ by_interval[(which(by_interval$avg_steps == max(by_interval$avg_steps), arr.ind 
 
 ###Question 3  - Imputing missing values
   
+for(i in 1:nrow(activity)){
+
+if(is.na(activity$steps[i])==TRUE){
+
+activity$steps[i]=by_interval$avg_steps[which(by_interval$interval==activity$interval[i])]
+}
+}
+
+step_total <- activity %>% 
+
+		group_by(date)%>%
+		summarize(total_steps = sum(steps))
+		
+		mean(step_total$total_steps)  
+ 
+median(step_total$total_steps) 
+
+####Plot histogram
 
 
+ggplot(data = step_total, aes(x = total_steps))+
+	geom_histogram(colour = "black", fill = "lightgreen", binwidth = 2000)+
+	theme_bw()	
+	
+### Question 4	
+
+activity$day <- weekdays(activity$date)   
+activity$day <- gsub("Saturday|Sunday", "weekend", activity$day)  
+activity$day <- gsub("Monday|Tuesday|Wednesday|Thursday|Friday", "weekday", activity$day)  
+by_interval <- activity %>%
+	       group_by(interval, day) %>%
+	       summarize(avg_steps = mean(steps))
+
+ by_interval$interval2 <- as.POSIXct(strptime(by_interval$interval, "%H%M"))
 
 
-by_day <- activity2 %>%
-	group_by(day, interval) %>%
-	summarize(avg_steps = mean(steps)) %>%
-	filter(grepl("weekday", day)
-
-
-
-p<- ggplot(interval_total, aes(x=interval2, y=Average)) + geom_line(color="darkblue", size=1) 
-
-
-
-p + facet_wrap(~day, nrow = 2) + 
+ggplot(by_interval, aes(x=interval2, y=avg_steps))+ 
+theme_bw() + geom_line(color="blue", size=1) +
+facet_wrap(~day, nrow = 2)+
 labs(x="5 minute interval", y="Average steps", title = "Average Steps per 5-Minute Intervals")+
 scale_x_datetime(breaks =date_breaks("2 hour"), labels= date_format("%H:%M"))
-
-
-
-
 
 
 
